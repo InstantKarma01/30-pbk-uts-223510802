@@ -1,85 +1,103 @@
-<script setup>
-import { RouterLink, RouterView } from 'vue-router'
-import HelloWorld from './components/HelloWorld.vue'
-</script>
-
 <template>
-  <header>
-    <img alt="Vue logo" class="logo" src="@/assets/logo.svg" width="125" height="125" />
-
-    <div class="wrapper">
-      <HelloWorld msg="You did it!" />
-
-      <nav>
-        <RouterLink to="/">Home</RouterLink>
-        <RouterLink to="/about">About</RouterLink>
-      </nav>
+  <div class="container">
+    <h1>Daftar Kegiatan</h1>
+    <form @submit.prevent="addActivity">
+      <input type="text" v-model="newActivity" placeholder="Tambahkan kegiatan baru">
+      <button type="submit">Tambah</button>
+    </form>
+    <ul>
+      <li v-for="(activity, index) in filteredActivities" :key="index">
+        <input type="checkbox" v-model="activity.done">
+        <span :class="{ done: activity.done }">{{ activity.text }}</span>
+        <button @click="deleteActivity(index)">Batal</button>
+      </li>
+    </ul>
+    <div class="filter">
+      <label>
+        <input type="checkbox" v-model="showUndoneOnly">
+        Tampilkan hanya kegiatan yang belum selesai
+      </label>
     </div>
-  </header>
-
-  <RouterView />
+  </div>
 </template>
 
-<style scoped>
-header {
-  line-height: 1.5;
-  max-height: 100vh;
-}
-
-.logo {
-  display: block;
-  margin: 0 auto 2rem;
-}
-
-nav {
-  width: 100%;
-  font-size: 12px;
-  text-align: center;
-  margin-top: 2rem;
-}
-
-nav a.router-link-exact-active {
-  color: var(--color-text);
-}
-
-nav a.router-link-exact-active:hover {
-  background-color: transparent;
-}
-
-nav a {
-  display: inline-block;
-  padding: 0 1rem;
-  border-left: 1px solid var(--color-border);
-}
-
-nav a:first-of-type {
-  border: 0;
-}
-
-@media (min-width: 1024px) {
-  header {
-    display: flex;
-    place-items: center;
-    padding-right: calc(var(--section-gap) / 2);
+<script>
+export default {
+  data() {
+    return {
+      activities: [],
+      newActivity: '',
+      showUndoneOnly: false
+    }
+  },
+  methods: {
+    addActivity() {
+      this.activities.push({ text: this.newActivity, done: false });
+      this.newActivity = '';
+    },
+    deleteActivity(index) {
+      this.activities.splice(index, 1);
+    }
+  },
+  computed: {
+    filteredActivities() {
+      if (this.showUndoneOnly) {
+        return this.activities.filter(activity => !activity.done);
+      } else {
+        return this.activities;
+      }
+    }
   }
+}
+</script>
 
-  .logo {
-    margin: 0 2rem 0 0;
-  }
+<style>
+.done {
+  text-decoration: line-through;
+}
 
-  header .wrapper {
-    display: flex;
-    place-items: flex-start;
-    flex-wrap: wrap;
-  }
+.container {
+  max-width: 400px;
+  margin: 40px auto;
+  padding: 20px;
+  background-color: #f9f9f9;
+  border: 1px solid #ccc;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
 
-  nav {
-    text-align: left;
-    margin-left: -1rem;
-    font-size: 1rem;
+ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
 
-    padding: 1rem 0;
-    margin-top: 1rem;
-  }
+li {
+  padding: 10px;
+  border-bottom: 1px solid #ccc;
+}
+
+li:last-child {
+  border-bottom: none;
+}
+
+input[type="checkbox"] {
+  margin-right: 10px;
+}
+
+button {
+  background-color: #4CAF50;
+  color: #fff;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #3e8e41;
+}
+
+.filter {
+  margin-top: 20px;
 }
 </style>
