@@ -1,3 +1,4 @@
+// Parent
 <template>
   <div class="container">
     <header>
@@ -12,15 +13,7 @@
         <option v-for="user in users" :key="user.id" :value="user">{{ user.name }}</option>
       </select>
     </div>
-    <div v-if="currentView === 'posts'">
-      <h1>Daftar Postingan</h1>
-      <ul>
-        <li v-for="(post, index) in posts" :key="index">
-          <h3>{{ post.title }}</h3>
-          <p>{{ post.body }}</p>
-        </li>
-      </ul>
-    </div>
+    <Posts v-if="currentView === 'posts'" :selectedUser="selectedUser" />
     <div v-else>
       <h1>Daftar Kegiatan</h1>
       <form @submit.prevent="addActivity">
@@ -44,17 +37,21 @@
 </template>
 
 <script>
+import Posts from './Posts.vue';
+
 export default {
+  components: {
+    Posts
+  },
   data() {
     return {
       activities: [],
-      posts: [],
       newActivity: '',
       showUndoneOnly: false,
       users: [],
       selectedUser: null,
       currentView: 'posts'
-    }
+    };
   },
   methods: {
     fetchUsers() {
@@ -65,18 +62,8 @@ export default {
           this.selectedUser = users[0];
         })
         .then(() => {
-          this.fetchPosts();
           this.fetchTodos();
         });
-    },
-    fetchPosts() {
-      if (this.selectedUser) {
-        fetch('https://jsonplaceholder.typicode.com/posts?userId=' + this.selectedUser.id)
-          .then(response => response.json())
-          .then(posts => {
-            this.posts = posts;
-          });
-      }
     },
     fetchTodos() {
       if (this.selectedUser) {
@@ -106,17 +93,17 @@ export default {
   },
   watch: {
     selectedUser(newUser) {
-      this.fetchPosts();
       this.fetchTodos();
     }
   },
   mounted() {
     this.fetchUsers();
   }
-}
+};
 </script>
 
-<style>
+
+<style scoped>
 .done {
   text-decoration: line-through;
 }
