@@ -1,10 +1,10 @@
-// Parent
 <template>
   <div class="container">
     <header>
       <nav>
-        <button :class="{ active: currentView === 'posts' }" @click="currentView = 'posts'">Post</button>
-        <button :class="{ active: currentView === 'todos' }" @click="currentView = 'todos'">Todos</button>
+        <router-link to="/todos" :class="{ active: currentRoute === '/todos' }">Todos</router-link>
+        <router-link to="/posts" :class="{ active: currentRoute === '/posts' }">Posts</router-link>
+        <router-link to="/albums" :class="{ active: currentRoute === '/albums' }">Albums</router-link>
       </nav>
     </header>
     <div class="user-selector">
@@ -13,95 +13,32 @@
         <option v-for="user in users" :key="user.id" :value="user">{{ user.name }}</option>
       </select>
     </div>
-    <Posts v-if="currentView === 'posts'" :selectedUser="selectedUser" />
-    <div v-else>
-      <h1>Daftar Kegiatan</h1>
-      <form @submit.prevent="addActivity">
-        <input type="text" v-model="newActivity" placeholder="Tambahkan kegiatan baru">
-        <button type="submit">Tambah</button>
-      </form>
-      <ul>
-        <li v-for="(activity, index) in filteredActivities" :key="index">
-          <input type="checkbox" v-model="activity.done">
-          <span :class="{ done: activity.done }">{{ activity.text }}</span>
-          <button @click="deleteActivity(index)">Batal</button>
-        </li>
-      </ul>
-      <div class="filter">
-        <label>
-          <input type="checkbox" v-model="showUndoneOnly"> Tampilkan hanya kegiatan yang belum selesai
-        </label>
-      </div>
-    </div>
+    <router-view :selectedUser="selectedUser" />
   </div>
 </template>
 
 <script>
-import Posts from './Posts.vue';
+import { ref, onMounted } from 'vue';
+import { useMainStore } from './stores';
+import { storeToRefs } from 'pinia';
 
 export default {
-  components: {
-    Posts
-  },
-  data() {
+  setup() {
+    const mainStore = useMainStore();
+    const { users, selectedUser } = storeToRefs(mainStore);
+
+    onMounted(() => {
+      mainStore.fetchUsers();
+    });
+
     return {
-      activities: [],
-      newActivity: '',
-      showUndoneOnly: false,
-      users: [],
-      selectedUser: null,
-      currentView: 'posts'
+      users,
+      selectedUser,
+      currentRoute: window.location.pathname,
     };
-  },
-  methods: {
-    fetchUsers() {
-      fetch('https://jsonplaceholder.typicode.com/users')
-        .then(response => response.json())
-        .then(users => {
-          this.users = users;
-          this.selectedUser = users[0];
-        })
-        .then(() => {
-          this.fetchTodos();
-        });
-    },
-    fetchTodos() {
-      if (this.selectedUser) {
-        fetch('https://jsonplaceholder.typicode.com/todos?userId=' + this.selectedUser.id)
-          .then(response => response.json())
-          .then(todos => {
-            this.activities = todos.map(todo => ({ text: todo.title, done: todo.completed }));
-          });
-      }
-    },
-    addActivity() {
-      this.activities.push({ text: this.newActivity, done: false });
-      this.newActivity = '';
-    },
-    deleteActivity(index) {
-      this.activities.splice(index, 1);
-    }
-  },
-  computed: {
-    filteredActivities() {
-      if (this.showUndoneOnly) {
-        return this.activities.filter(activity => !activity.done);
-      } else {
-        return this.activities;
-      }
-    }
-  },
-  watch: {
-    selectedUser(newUser) {
-      this.fetchTodos();
-    }
-  },
-  mounted() {
-    this.fetchUsers();
   }
 };
 </script>
-
 
 <style scoped>
 .done {
@@ -159,15 +96,16 @@ nav {
   justify-content: center;
   gap: 10px;
 }
-nav button {
+nav a {
   background-color: transparent;
   border: none;
   color: white;
   padding: 10px 20px;
   cursor: pointer;
   font-size: 16px;
+  text-decoration: none;
 }
-nav button.active {
+nav a.active {
   font-weight: bold;
   text-decoration: underline;
 }
